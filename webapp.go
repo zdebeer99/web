@@ -25,11 +25,19 @@ func (this *Engine) Run(addr string) {
 	http.ListenAndServe(addr, this)
 }
 
-func (this *Engine) contextFactory(w http.ResponseWriter, req *http.Request) mux.Context {
+func (this *Engine) HandleFunc(path string, f func(*Context)) *mux.Route {
+	return this.Router.HandleFunc(path, Handler(f))
+}
+
+func (this *Engine) contextFactory(w http.ResponseWriter, req *http.Request) interface{} {
 	c := &Context{}
 	c.HandlerContext = mux.NewContext(w, req)
 	c.renderEngine = this.RenderEngine
 	return c
+}
+
+func (this *Engine) handleAdapter(f func(interface{})) {
+
 }
 
 type Renderer interface {
