@@ -28,6 +28,14 @@ func Wrap(handler Handler) MiddlewareHandler {
 	})
 }
 
+//WebappHandler Wrap a mux handler and calls a webapp handler
+func WebappHandler(f func(*Context)) func(interface{}) {
+	return func(mx interface{}) {
+		c := mx.(*Context)
+		f(c)
+	}
+}
+
 // Negroni is a stack of Middleware Handlers that can be invoked as an http.Handler.
 // Negroni middleware is evaluated in the order that they are added to the stack using
 // the Use and UseHandler methods.
@@ -36,7 +44,6 @@ type Webapp struct {
 	handlers     []MiddlewareHandler
 	router       *RouterContext
 	RenderEngine Renderer
-	dataContext  *DataContext
 }
 
 // New returns a new Negroni instance with no middleware preconfigured.
