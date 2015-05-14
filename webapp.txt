@@ -1,0 +1,52 @@
+// Web App Helper functions.
+package webapp
+
+import (
+	"net/http"
+
+	"github.com/zdebeer99/mux"
+)
+
+type HandlerFunc func(c *Context)
+
+type Engine struct {
+	*mux.Router
+	RenderEngine Renderer
+	dataContext  *DataContext
+}
+
+func New() *Engine {
+	e := &Engine{}
+	e.Router = mux.NewRouter()
+	e.SetContextFactory(e.contextFactory)
+	e.RenderEngine = NewJadeRender("./views")
+	return e
+}
+
+func (this *Engine) Run(addr string) {
+	http.ListenAndServe(addr, this)
+}
+
+func (this *Engine) HandleFunc(path string, f func(*Context)) *mux.Route {
+	return this.Router.HandleFunc(path, Handler(f))
+}
+
+func (this *Engine) Get(path string, f func(*Context)) *mux.Route {
+	return this.Router.HandleFunc(path, Handler(f)).Methods("GET")
+}
+
+func (this *Engine) Post(path string, f func(*Context)) *mux.Route {
+	return this.Router.HandleFunc(path, Handler(f)).Methods("POST")
+}
+
+func (this *Engine) contextFactory(w http.ResponseWriter, req *http.Request) interface{} {
+	c := &Context{}
+	c.HandlerContext = mux.NewContext(w, req)
+	c.engine = this
+	return c
+}
+
+func (this *Engine) ConnectDatabase(path string) {
+	this.dataContext = &DataContext{}
+	this.dataContext.ConnectDatabase(path)
+}

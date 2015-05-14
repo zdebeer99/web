@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-func Handler(f func(*Context)) func(interface{}) {
+func WebappHandler(f func(*Context)) func(interface{}) {
 	return func(mx interface{}) {
 		c := mx.(*Context)
 		f(c)
