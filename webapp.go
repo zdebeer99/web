@@ -8,6 +8,12 @@ import (
 	"github.com/zdebeer99/mux"
 )
 
+const (
+	KeySessionId      = "SessionId"
+	KeyDatabaseObject = "DatabaseObject"
+	KeyUser           = "UserName"
+)
+
 type Handler interface {
 	ServeHTTP(c *Context)
 }

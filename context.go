@@ -15,8 +15,11 @@ var decoder *schema.Decoder = schema.NewDecoder()
 
 type Context struct {
 	*mux.HandlerContext
-	app      *Webapp
-	register map[string]interface{}
+	app       *Webapp
+	register  map[string]interface{}
+	Session   Session
+	SessionId string
+	User      UserManager
 }
 
 func NewContext(app *Webapp, w http.ResponseWriter, req *http.Request) *Context {
@@ -42,7 +45,7 @@ func (this *Context) Get(name string) interface{} {
 	return this.register[name]
 }
 
-// Get a value that was set on this request context.
+// Get all values that was set on this request context.
 func (this *Context) GetAll() map[string]interface{} {
 	return this.register
 }
@@ -55,14 +58,24 @@ func (this *Context) Set(name string, value interface{}) {
 	this.register[name] = value
 }
 
-func (this *Context) RenderString(txt string) {
+//Return a String to the client.
+func (this *Context) ViewString(txt string) {
 	fmt.Fprint(this.Response(), txt)
 }
 
-func (this *Context) Render(view string, model interface{}) {
-	this.app.RenderEngine.Render(this.Response(), view, model)
+// View Render a template to html.
+// By default gojade rendering engine is used, this can be customized.
+func (this *Context) View(view string, model interface{}) {
+	this.app.RenderEngine.Render(this, view, model)
 }
 
+func (this *Context) Redirect(path string) {
+	fmt.Println("Redirected To", path)
+	http.Redirect(this.Response(), this.Request(), path, http.StatusMovedPermanently)
+}
+
+// BindForms binds a go structure to a html form
+// Uses gorilla.schema
 func (this *Context) BindForm(model interface{}) {
 	err := this.Request().ParseForm()
 	if err != nil {
@@ -74,8 +87,11 @@ func (this *Context) BindForm(model interface{}) {
 	}
 }
 
+// DB get a mgo.Database instance for a mongo database.
+// This function can be modified to return your database instance.
+// The MongoDB Middleware must be used for this function to work.
 func (this *Context) DB() *mgo.Database {
-	db := this.Get("MongoDB")
+	db := this.Get(KeyDatabaseObject)
 	if db == nil {
 		panic("Database connection was not establish. Use MongoDB Middleware to connect the initial connection.")
 	}

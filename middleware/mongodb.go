@@ -5,17 +5,19 @@ import (
 	"gopkg.in/mgo.v2"
 )
 
-func NewMongoDb(path string) *MongoDBContext {
-	mongodb := new(MongoDBContext)
+type M map[string]interface{}
+
+func NewMongoDb(path string) *mongoDBContext {
+	mongodb := new(mongoDBContext)
 	mongodb.ConnectDatabase(path)
 	return mongodb
 }
 
-type MongoDBContext struct {
+type mongoDBContext struct {
 	MainSession *mgo.Session
 }
 
-func (this *MongoDBContext) ConnectDatabase(path string) {
+func (this *mongoDBContext) ConnectDatabase(path string) {
 	if path == "" {
 		path = "localhost"
 	}
@@ -27,14 +29,14 @@ func (this *MongoDBContext) ConnectDatabase(path string) {
 	}
 }
 
-func (this *MongoDBContext) Session() *mgo.Session {
+func (this *mongoDBContext) Session() *mgo.Session {
 	return this.MainSession.Copy()
 }
 
-func (this *MongoDBContext) ServeHTTP(c *webapp.Context, next webapp.HandlerFunc) {
+func (this *mongoDBContext) ServeHTTP(c *webapp.Context, next webapp.HandlerFunc) {
 	session := this.MainSession.Copy()
 	defer session.Close()
 	c.Set("MongoSession", session)
-	c.Set("MongoDB", session.DB(""))
+	c.Set(webapp.KeyDatabaseObject, session.DB(""))
 	next(c)
 }
