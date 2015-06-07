@@ -26,7 +26,11 @@ How it should work
 * MongoDB Support
 * Data Bindings like form, json, etc
 
-### Middleware
+## Basic Web app
+
+## Routing
+
+## Middleware
 
 the following middleware is included in webapp.
 
@@ -34,11 +38,23 @@ the following middleware is included in webapp.
 * Logger - Copied from negroni
 * MongoDB - Activate a mongodb connection
 
-## Basic Web app
+**Custom Middleware**
 
-## Routing
+Middleware can be added from the Use(...) and UseFunc(...) functions. Custom Middleware requires a 'c *Context, next HandlerFunc' signature.
 
-## Middleware
+Example of middleware requiring user login before opening the page:
+
+
+```golang
+  r:=webapp.New()
+  r.UseFunc(func(c *webapp.Context, next webapp.Handler) {
+    if c.Auhtenticate(){
+      next(c)
+    }else{
+      c.Redirect("/login")
+    }
+  })
+```
 
 ## Rendering
 

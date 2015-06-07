@@ -1,6 +1,7 @@
 package webapp
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -35,7 +36,7 @@ func Wrap(handler Handler) MiddlewareHandler {
 }
 
 //WebappHandler Wrap a mux handler and calls a webapp handler
-func WebappHandler(f func(*Context)) func(interface{}) {
+func WebappHandlerFunc(f func(*Context)) func(interface{}) {
 	return func(mx interface{}) {
 		c := mx.(*Context)
 		f(c)
@@ -46,6 +47,8 @@ func WebappHandler(f func(*Context)) func(interface{}) {
 // Negroni middleware is evaluated in the order that they are added to the stack using
 // the Use and UseHandler methods.
 type Webapp struct {
+	parent       *Webapp
+	children     []*Webapp
 	middleware   middleware
 	handlers     []MiddlewareHandler
 	router       *RouterContext
@@ -64,16 +67,24 @@ func New(handlers ...MiddlewareHandler) *Webapp {
 	return web
 }
 
+func (this *Webapp) NewRoute(f func(*Context)) *mux.Route {
+	return this.router.NewRoute().HandlerFunc(WebappHandlerFunc(f))
+}
+
+func (this *Webapp) Handle(path string, handler Handler) *mux.Route {
+	return this.router.Handle(path, NewMuxHandlerAdapter(handler))
+}
+
 func (this *Webapp) HandleFunc(path string, f func(*Context)) *mux.Route {
-	return this.router.HandleFunc(path, WebappHandler(f))
+	return this.router.HandleFunc(path, WebappHandlerFunc(f))
 }
 
 func (this *Webapp) Get(path string, f func(*Context)) *mux.Route {
-	return this.router.HandleFunc(path, WebappHandler(f)).Methods("GET")
+	return this.router.HandleFunc(path, WebappHandlerFunc(f)).Methods("GET")
 }
 
 func (this *Webapp) Post(path string, f func(*Context)) *mux.Route {
-	return this.router.HandleFunc(path, WebappHandler(f)).Methods("POST")
+	return this.router.HandleFunc(path, WebappHandlerFunc(f)).Methods("POST")
 }
 
 func (this *Webapp) FileServer(path_prefix string, file_path string) {
@@ -91,6 +102,10 @@ func Classic() *Webapp {
 
 func (n *Webapp) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	c := NewContext(n, rw, r)
+	n.ServeHTTPContext(c)
+}
+
+func (n *Webapp) ServeHTTPContext(c *Context) {
 	n.middleware.ServeHTTP(c)
 }
 
@@ -117,16 +132,41 @@ func (n *Webapp) UseHandlerFunc(handlerFunc func(c *Context)) {
 
 // Run is a convenience function that runs the negroni stack as an HTTP
 // server. The addr string takes the same format as http.ListenAndServe.
-func (n *Webapp) Run(addr string) {
-	n.UseHandler(n.router)
+func (this *Webapp) Run(addr string) {
 	l := log.New(os.Stdout, "[webapp] ", 0)
-	l.Printf("listening on %s", addr)
-	l.Fatal(http.ListenAndServe(addr, n))
+	for _, child := range this.children {
+		child.Run("")
+	}
+	if this.parent != nil {
+		this.UseHandler(this.router)
+		l.Printf("listening for subrouter")
+	} else {
+		this.UseHandler(this.router)
+		l.Printf("listening on %s", addr)
+		l.Fatal(http.ListenAndServe(addr, this))
+	}
 }
 
 // Returns a list of all the handlers in the current Negroni middleware chain.
 func (n *Webapp) Handlers() []MiddlewareHandler {
 	return n.handlers
+}
+
+func (this *Webapp) SubRoute(path string) *Webapp {
+	web := this.newChild()
+	web.router = NewRouterBase(mux.NewRouter().PathPrefix(path).Subrouter())
+	this.NewRoute(func(c *Context) {
+		fmt.Println("HELLO", c.Route.GetName())
+		web.ServeHTTPContext(c)
+	}).PathPrefix(path)
+	return web
+}
+
+func (this *Webapp) newChild() *Webapp {
+	web := New()
+	web.parent = this
+	this.children = append(this.children, web)
+	return web
 }
 
 func build(handlers []MiddlewareHandler) middleware {
@@ -164,6 +204,11 @@ type RouterContext struct {
 //NewRouter Create a new mux router adapter
 func NewRouter() *RouterContext {
 	return &RouterContext{mux.NewRouter()}
+}
+
+//NewRouter Create a new mux router adapter
+func NewRouterBase(router *mux.Router) *RouterContext {
+	return &RouterContext{router}
 }
 
 //Wrapped ServeHttp

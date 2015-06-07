@@ -1,6 +1,10 @@
 package app
 
-import "github.com/zdebeer99/webapp"
+import (
+	"fmt"
+
+	"github.com/zdebeer99/webapp"
+)
 
 func NewUserMW() *userMW {
 	return new(userMW)
@@ -39,6 +43,7 @@ func (this *userManager) Logout() {
 
 func (this *userManager) Authenticated() bool {
 	user := this.Info()
+	fmt.Println("Request Auth", user)
 	if user == nil {
 		return false
 	}

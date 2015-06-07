@@ -4,6 +4,7 @@ package webapp
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 
 	"gopkg.in/mgo.v2"
 
@@ -87,6 +88,16 @@ func (this *Context) BindForm(model interface{}) {
 	}
 }
 
+func (this *Context) Form() url.Values {
+	this.Request().ParseForm()
+	return this.Request().Form
+}
+
+func (this *Context) PostForm() url.Values {
+	this.Request().ParseForm()
+	return this.Request().PostForm
+}
+
 // DB get a mgo.Database instance for a mongo database.
 // This function can be modified to return your database instance.
 // The MongoDB Middleware must be used for this function to work.
@@ -96,6 +107,10 @@ func (this *Context) DB() *mgo.Database {
 		panic("Database connection was not establish. Use MongoDB Middleware to connect the initial connection.")
 	}
 	return db.(*mgo.Database)
+}
+
+func (this *Context) Auhtenticate() bool {
+	return this.User.Authenticated()
 }
 
 func (this *Context) Error(errormessage string, code int) {
