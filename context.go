@@ -30,6 +30,10 @@ func NewContext(app *Webapp, w http.ResponseWriter, req *http.Request) *Context 
 	return c
 }
 
+func (this *Context) App() *Webapp {
+	return this.app
+}
+
 func (this *Context) Http() (ResponseWriter, *http.Request) {
 	return this.ResponseWriter(), this.Request()
 }
@@ -71,8 +75,8 @@ func (this *Context) View(view string, model interface{}) {
 }
 
 func (this *Context) Redirect(path string) {
-	fmt.Println("Redirected To", path)
-	http.Redirect(this.Response(), this.Request(), path, http.StatusMovedPermanently)
+	http.Redirect(this.Response(), this.Request(), path, http.StatusSeeOther) //303 Redirect
+	//http.Redirect(this.Response(), this.Request(), path, http.StatusTemporaryRedirect)//307 Redirect
 }
 
 // BindForms binds a go structure to a html form

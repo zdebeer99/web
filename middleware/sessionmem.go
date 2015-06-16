@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/zdebeer99/webapp"
@@ -8,7 +9,7 @@ import (
 
 // BasicSession is a basic session store that stores session data in local memory
 type BasicSession struct {
-	sessionid string
+	sessionid string `_id`
 	data      map[string]interface{}
 }
 
@@ -60,12 +61,14 @@ type sessionMemoryMW struct {
 func (this *sessionMemoryMW) ServeHTTP(c *webapp.Context, next webapp.HandlerFunc) {
 	id := c.SessionId
 	if id == "" {
+		//c.App().Use(NewSessionId())
 		panic("SessionId Empty, make sure the SessionId Middleware is set before this middleware.")
 	}
 	s := this.get(id)
 	if s != nil {
 		c.Session = s
 	} else {
+		fmt.Println("Create new Session")
 		session := new(BasicSession)
 		session.SetSessionId(id)
 		c.Session = session

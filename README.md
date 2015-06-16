@@ -44,7 +44,6 @@ Middleware can be added from the Use(...) and UseFunc(...) functions. Custom Mid
 
 Example of middleware requiring user login before opening the page:
 
-
 ```golang
   r:=webapp.New()
   r.UseFunc(func(c *webapp.Context, next webapp.Handler) {

@@ -5,6 +5,7 @@ import (
 
 	"github.com/zdebeer99/webapp"
 	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 )
 
 // NewUserCustomStoreMW Allows a custom store constructor.
@@ -31,6 +32,7 @@ type userMW struct {
 	storefactory func(*webapp.Context) UserStore
 }
 
+// TODO investigate the user manager for security loop holes and make it more robust.
 func (this *userMW) ServeHTTP(c *webapp.Context, next webapp.HandlerFunc) {
 	manager := &userManager{context: c, store: this.storefactory(c)}
 	c.User = manager
@@ -105,7 +107,13 @@ func (this *userManager) Info() *webapp.User {
 	}
 	user, ok := userobj.(*webapp.User)
 	if !ok {
-		panic("The object in session variable 'User' is not of type webapp.User")
+		// a hack to convert the user object loaded from the database.
+		if usermap, ok := userobj.(bson.M); ok {
+			user = &webapp.User{usermap["userid"].(string), usermap["username"].(string), usermap["password"].(string)}
+			c.Session.Set(webapp.KeyUser, user)
+		} else {
+			panic("The object in session variable 'User' is not of type webapp.User")
+		}
 	}
 	this.user = user
 	return user

@@ -13,7 +13,7 @@ import (
 // NewSessionId Creates a SessionId and keeps track of the session using cookies
 // This Middleware only manages a sessionid and does manage session data.
 func NewSessionId() *sessionIdContext {
-	durr, err := time.ParseDuration("30m")
+	durr, err := time.ParseDuration("300h")
 	if err != nil {
 		panic(err)
 	}

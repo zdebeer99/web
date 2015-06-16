@@ -12,7 +12,7 @@ import (
 const (
 	KeySessionId      = "SessionId"
 	KeyDatabaseObject = "DatabaseObject"
-	KeyUser           = "UserName"
+	KeyUser           = "User"
 )
 
 type Handler interface {
