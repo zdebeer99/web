@@ -1,6 +1,8 @@
 package webapp
 
-import "net/url"
+import (
+	"net/url"
+)
 
 type User struct {
 	UserId   string `mgo:"_id"`
@@ -11,6 +13,7 @@ type User struct {
 type ViewModel struct {
 	Model interface{}
 	User  UserManager
+	Html  *Html
 }
 
 func Form2M(values url.Values) map[string]interface{} {

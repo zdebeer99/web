@@ -2,7 +2,6 @@
 package webapp
 
 import (
-	"fmt"
 	"net/http"
 	"net/url"
 
@@ -63,15 +62,31 @@ func (this *Context) Set(name string, value interface{}) {
 	this.register[name] = value
 }
 
+func (this *Context) Error(errormessage string, code int) {
+	this.ResponseWriter().WriteHeader(code)
+	WriteString(this.ResponseWriter(), errormessage)
+}
+
 //Return a String to the client.
-func (this *Context) ViewString(txt string) {
-	fmt.Fprint(this.Response(), txt)
+func (this *Context) ViewString(format string, data ...interface{}) {
+	this.ResponseWriter().WriteHeader(http.StatusOK)
+	WriteString(this.ResponseWriter(), format, data)
 }
 
 // View Render a template to html.
 // By default gojade rendering engine is used, this can be customized.
 func (this *Context) View(view string, model interface{}) {
+	this.ResponseWriter().WriteHeader(http.StatusOK)
 	this.app.RenderEngine.Render(this, view, model)
+}
+
+// View Render a template to html.
+// By default gojade rendering engine is used, this can be customized.
+func (this *Context) Json(model interface{}) {
+	this.ResponseWriter().WriteHeader(http.StatusOK)
+	if err := WriteJson(this.ResponseWriter(), model); err != nil {
+		panic(err)
+	}
 }
 
 func (this *Context) Redirect(path string) {
@@ -115,8 +130,4 @@ func (this *Context) DB() *mgo.Database {
 
 func (this *Context) Auhtenticate() bool {
 	return this.User.Authenticated()
-}
-
-func (this *Context) Error(errormessage string, code int) {
-
 }
