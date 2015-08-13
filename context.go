@@ -80,6 +80,11 @@ func (this *Context) View(view string, model interface{}) {
 	this.app.RenderEngine.Render(this, view, model)
 }
 
+// File return a file from a path
+func (this *Context) File(filePath string) {
+	http.ServeFile(this.Response(), this.Request(), filePath)
+}
+
 // View Render a template to html.
 // By default gojade rendering engine is used, this can be customized.
 func (this *Context) Json(model interface{}) {
