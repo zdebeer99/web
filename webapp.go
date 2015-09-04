@@ -1,7 +1,6 @@
 package webapp
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -139,7 +138,6 @@ func (this *Webapp) Run(addr string) {
 	}
 	if this.parent != nil {
 		this.UseHandler(this.router)
-		l.Printf("listening for subrouter")
 	} else {
 		this.UseHandler(this.router)
 		l.Printf("listening on %s", addr)
@@ -156,7 +154,6 @@ func (this *Webapp) SubRoute(path string) *Webapp {
 	web := this.newChild()
 	web.router = NewRouterBase(mux.NewRouter().PathPrefix(path).Subrouter())
 	this.NewRoute(func(c *Context) {
-		fmt.Println("HELLO", c.Route.GetName())
 		web.ServeHTTPContext(c)
 	}).PathPrefix(path)
 	return web

@@ -2,6 +2,7 @@
 package webapp
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/url"
 
@@ -102,6 +103,14 @@ func (this *Context) BindForm(model interface{}) {
 		panic(err)
 	}
 	err = decoder.Decode(model, this.Request().PostForm)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (this *Context) BindJson(model interface{}) {
+	decoder := json.NewDecoder(this.Request().Body)
+	err := decoder.Decode(&model)
 	if err != nil {
 		panic(err)
 	}
