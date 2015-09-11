@@ -8,6 +8,8 @@ webapp uses a modified gorilla/mux router found in zdebeer99/mux and negroni for
 
 ## Overview
 
+API Documentation https://gowalker.org/github.com/zdebeer99/webapp
+
 ### Features
 
 To provide a simple one stop library that has the following built-in:
@@ -57,4 +59,18 @@ Example of middleware requiring user login before opening the page:
 
 ## Rendering
 
-## User Management
+## Context API Reference
+
+**Vars**
+map containing route variables.
+
+```golang
+app.Get("getItem/{id}",getItem)
+
+func getItem(c *webapp.Context){
+  id := c.Vars["id"].(string)
+  .
+  .
+  .
+}
+```
